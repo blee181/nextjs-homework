@@ -35,3 +35,16 @@ export default async function Home() {
       </main>
   );
 }
+<div style={{ marginBottom: "30px" }}>
+    <a href="/login" style={{ marginRight: "20px" }}>
+        Login
+    </a>
+
+    <a href="/profile" style={{ marginRight: "20px" }}>
+        Profile
+    </a>
+
+    <a href="/private">
+        Private Page
+    </a>
+</div>
