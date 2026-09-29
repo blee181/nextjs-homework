@@ -1,50 +1,57 @@
-import { createClient } from "@supabase/supabase-js";
-
-export default async function Home() {
-  const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
-  );
-
-  const { data: movies, error } = await supabase
-      .from("movies")
-      .select("*")
-      .order("id");
-
-  if (error) {
+export default function Home() {
     return (
-        <main className="p-8">
-          <h1 className="text-2xl font-bold">Error</h1>
-          <p>{error.message}</p>
+        <main style={{ padding: "32px" }}>
+            <h1>My Favorite Movies</h1>
+
+            <div style={{ marginBottom: "30px" }}>
+                <a href="/login" style={{ marginRight: "20px" }}>
+                    Login
+                </a>
+
+                <a href="/profile" style={{ marginRight: "20px" }}>
+                    Profile
+                </a>
+
+                <a href="/private">
+                    Private Page
+                </a>
+            </div>
+
+            <div
+                style={{
+                    border: "1px solid black",
+                    padding: "16px",
+                    marginBottom: "16px",
+                    borderRadius: "8px",
+                }}
+            >
+                <h2>Parasite</h2>
+                <p>2019</p>
+            </div>
+
+            <div
+                style={{
+                    border: "1px solid black",
+                    padding: "16px",
+                    marginBottom: "16px",
+                    borderRadius: "8px",
+                }}
+            >
+                <h2>Spirited Away</h2>
+                <p>2001</p>
+            </div>
+
+            <div
+                style={{
+                    border: "1px solid black",
+                    padding: "16px",
+                    marginBottom: "16px",
+                    borderRadius: "8px",
+                }}
+            >
+                <h2>Paprika</h2>
+                <p>2006</p>
+            </div>
         </main>
     );
-  }
-
-  return (
-      <main className="p-8">
-        <h1 className="text-3xl font-bold mb-6">My Favorite Movies</h1>
-
-        <ul className="space-y-4">
-          {movies?.map((movie) => (
-              <li key={movie.id} className="border rounded-lg p-4">
-                <h2 className="text-xl font-semibold">{movie.title}</h2>
-                <p>{movie.year}</p>
-              </li>
-          ))}
-        </ul>
-      </main>
-  );
 }
-<div style={{ marginBottom: "30px" }}>
-    <a href="/login" style={{ marginRight: "20px" }}>
-        Login
-    </a>
-
-    <a href="/profile" style={{ marginRight: "20px" }}>
-        Profile
-    </a>
-
-    <a href="/private">
-        Private Page
-    </a>
-</div>
