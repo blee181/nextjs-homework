@@ -9,8 +9,6 @@ export default function LoginPage() {
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        // Use the stable production callback so Google login works even when
-        // someone opens a commit-specific Vercel deployment URL.
         redirectTo: "https://nextjs-homework-sigma.vercel.app/auth/callback",
       },
     });
@@ -19,12 +17,12 @@ export default function LoginPage() {
   return (
     <main className="loginPage">
       <section className="loginCard">
-        <a className="brand" href="/">← Memehattan</a>
+        <a className="brand" href="/">← CATCAPTION</a>
         <span className="eyebrow" style={{ marginTop: 32 }}>MEMBERS ONLY</span>
-        <h1>Make the<br />internet worse.</h1>
+        <h1>Make a cat<br />say something better.</h1>
         <p>
-          Sign in to generate AI captions and vote on everyone else&apos;s attempts.
-          Browsing stays public.
+          Sign in to generate AI captions, upvote the funniest ones, and change
+          your vote whenever something better shows up.
         </p>
         <button className="googleButton" onClick={signInWithGoogle}>
           Continue with Google →
