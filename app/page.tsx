@@ -56,9 +56,9 @@ export default async function Home() {
     if (!meme) throw new Error("Meme not found.");
 
     const prompt =
-      `Write exactly one short, funny meme caption for a chronically-online Columbia student exploring NYC. ` +
+      `Write exactly one short, funny meme caption for a chronically-online Columbia student in NYC. ` +
       `Image title: "${meme.title}". Image description: "${meme.description}". ` +
-      `User direction: "${style || "Make it relatable, surprising, and under 18 words."}" ` +
+      `User direction: "${style || "Make it dry, relatable, internet-native, and under 18 words."}" ` +
       `Return only the caption. No quotation marks, hashtags, explanations, or emojis.`;
 
     const token = process.env.AI_GATEWAY_API_KEY ?? process.env.VERCEL_OIDC_TOKEN;
@@ -135,7 +135,7 @@ export default async function Home() {
     <main className="shell">
       <header className="hero">
         <nav className="nav">
-          <a className="brand" href="/">Memehattan</a>
+          <a className="brand" href="/">CATCAPTION</a>
           <div className="navLinks">
             {user ? (
               <>
@@ -149,18 +149,18 @@ export default async function Home() {
         </nav>
 
         <div className="heroCopy">
-          <span className="eyebrow">NYC STUDENT MEME LAB</span>
-          <h1>Caption the chaos.<br />Rate the funniest.</h1>
+          <span className="eyebrow">AI MEME CAPTION LAB</span>
+          <h1>Give the cat<br />a better line.</h1>
           <p>
-            Blank NYC student-life memes + AI captions + community voting.
-            Built for the chronically online.
+            Pick a blank cat meme, ask AI for a caption, then vote on the ones
+            that deserve to survive the group chat.
           </p>
         </div>
       </header>
 
       <section className="howItWorks">
-        <span>01 Pick a scene</span>
-        <span>02 Generate with AI</span>
+        <span>01 Pick a cat</span>
+        <span>02 Generate a caption</span>
         <span>03 Vote the winner</span>
       </section>
 
@@ -196,12 +196,12 @@ export default async function Home() {
                       <input
                         id={`style-${meme.id}`}
                         name="style"
-                        placeholder="e.g. Columbia midterms, dating apps, finance bro energy..."
+                        placeholder="midterms, dating apps, dorm life, NYC weekends..."
                         maxLength={180}
                       />
-                      <button type="submit">Generate ✦</button>
+                      <button type="submit">Generate</button>
                     </div>
-                    <small>The exact generation prompt is saved with every caption.</small>
+                    <small>The exact prompt used to generate each caption is saved in the database.</small>
                   </form>
                 ) : (
                   <a className="lockedCta" href="/login">
@@ -212,7 +212,7 @@ export default async function Home() {
                 <div className="captionList">
                   {ranked.length === 0 ? (
                     <div className="emptyState">
-                      No captions yet. Be the first person to make this image unreasonably online.
+                      No captions yet. Sign in and be the first to caption this one.
                     </div>
                   ) : (
                     ranked.map((caption, index) => {
@@ -227,7 +227,7 @@ export default async function Home() {
                           <div className="rank">#{index + 1}</div>
                           <div className="captionBody">
                             <p>{caption.caption_text}</p>
-                            <span>AI generated · score {score >= 0 ? "+" : ""}{score}</span>
+                            <span>caption · score {score >= 0 ? "+" : ""}{score}</span>
                           </div>
                           <div className="voteBox">
                             <form action={vote}>
@@ -268,7 +268,7 @@ export default async function Home() {
       </section>
 
       <footer>
-        Memehattan · AI captions for NYC student life · Google Gemini via Vercel AI Gateway
+        CATCAPTION · AI captions + community voting · built with Supabase and Gemini
       </footer>
     </main>
   );
