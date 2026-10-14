@@ -6,8 +6,8 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Memehattan — NYC AI Caption Battle",
-  description: "Generate AI meme captions for NYC student life and vote for the funniest.",
+  title: "CATCAPTION — AI Meme Caption Battle",
+  description: "Generate AI cat meme captions and vote for the funniest ones.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
