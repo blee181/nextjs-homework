@@ -19,7 +19,14 @@ type Meme = {
   captions: Caption[] | null;
 };
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ sort?: string }>;
+}) {
+  const { sort } = await searchParams;
+  const mode = sort === "new" ? "new" : "top";
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -33,6 +40,20 @@ export default async function Home() {
     .order("created_at", { ascending: true });
 
   const memes = (data ?? []) as Meme[];
+
+  const allCaptions = memes.flatMap((meme) =>
+    (meme.captions ?? []).map((caption) => ({
+      ...caption,
+      memeTitle: meme.title,
+      score: (caption.votes ?? []).reduce((sum, item) => sum + item.vote, 0),
+    }))
+  );
+
+  const totalVotes = allCaptions.reduce(
+    (sum, caption) => sum + (caption.votes ?? []).length,
+    0
+  );
+  const topCaption = [...allCaptions].sort((a, b) => b.score - a.score)[0];
 
   async function generateCaption(formData: FormData) {
     "use server";
@@ -118,17 +139,36 @@ export default async function Home() {
     const value = Number(formData.get("vote"));
     if (!captionId || ![1, -1].includes(value)) return;
 
-    const { error } = await supabase.from("votes").upsert(
-      {
-        caption_id: captionId,
-        user_id: user.id,
-        vote: value,
-      },
-      { onConflict: "caption_id,user_id" }
-    );
+    const { data: current } = await supabase
+      .from("votes")
+      .select("id, vote")
+      .eq("caption_id", captionId)
+      .eq("user_id", user.id)
+      .maybeSingle();
 
-    if (error) throw new Error(error.message);
+    if (current?.vote === value) {
+      const { error } = await supabase.from("votes").delete().eq("id", current.id);
+      if (error) throw new Error(error.message);
+    } else {
+      const { error } = await supabase.from("votes").upsert(
+        {
+          caption_id: captionId,
+          user_id: user.id,
+          vote: value,
+        },
+        { onConflict: "caption_id,user_id" }
+      );
+      if (error) throw new Error(error.message);
+    }
+
     revalidatePath("/");
+  }
+
+  async function signOut() {
+    "use server";
+    const supabase = await createClient();
+    await supabase.auth.signOut();
+    redirect("/");
   }
 
   return (
@@ -141,6 +181,9 @@ export default async function Home() {
               <>
                 <span className="signedIn">Signed in</span>
                 <a href="/profile">Profile</a>
+                <form action={signOut}>
+                  <button className="textButton" type="submit">Sign out</button>
+                </form>
               </>
             ) : (
               <a className="loginLink" href="/login">Sign in with Google</a>
@@ -152,9 +195,19 @@ export default async function Home() {
           <span className="eyebrow">AI MEME CAPTION LAB</span>
           <h1>Give the cat<br />a better line.</h1>
           <p>
-            Pick a blank cat meme, ask AI for a caption, then vote on the ones
-            that deserve to survive the group chat.
+            Pick a blank cat meme, generate a caption with AI, and vote on the
+            lines worth sending to the group chat.
           </p>
+        </div>
+
+        <div className="statsBar">
+          <div><strong>{memes.length}</strong><span>meme templates</span></div>
+          <div><strong>{allCaptions.length}</strong><span>AI captions</span></div>
+          <div><strong>{totalVotes}</strong><span>community votes</span></div>
+          <div className="winnerStat">
+            <span>Current winner</span>
+            <strong>{topCaption ? `“${topCaption.caption_text}”` : "Be the first to vote"}</strong>
+          </div>
         </div>
       </header>
 
@@ -164,9 +217,23 @@ export default async function Home() {
         <span>03 Vote the winner</span>
       </section>
 
+      <section className="feedHeader">
+        <div>
+          <span className="eyebrow">COMMUNITY FEED</span>
+          <h2>Caption battles</h2>
+        </div>
+        <div className="sortTabs" aria-label="Caption sort">
+          <a className={mode === "top" ? "active" : ""} href="/?sort=top">Top rated</a>
+          <a className={mode === "new" ? "active" : ""} href="/?sort=new">Newest</a>
+        </div>
+      </section>
+
       <section className="feed">
         {memes.map((meme) => {
           const ranked = [...(meme.captions ?? [])].sort((a, b) => {
+            if (mode === "new") {
+              return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+            }
             const scoreA = (a.votes ?? []).reduce((sum, item) => sum + item.vote, 0);
             const scoreB = (b.votes ?? []).reduce((sum, item) => sum + item.vote, 0);
             return scoreB - scoreA;
@@ -184,14 +251,18 @@ export default async function Home() {
                   <div>
                     <span className="eyebrow">CAPTION BATTLE</span>
                     <h2>{meme.title}</h2>
+                    <p className="memeDescription">{meme.description}</p>
                   </div>
                   <span className="count">{ranked.length} captions</span>
                 </div>
 
                 {user ? (
                   <form className="generator" action={generateCaption}>
+                    <label htmlFor={`style-${meme.id}`}>Generate your version</label>
+                    <p className="helperText">
+                      Optional: give the AI a theme. Leave it blank for a surprise.
+                    </p>
                     <input type="hidden" name="meme_id" value={meme.id} />
-                    <label htmlFor={`style-${meme.id}`}>Give the AI a direction</label>
                     <div className="generatorRow">
                       <input
                         id={`style-${meme.id}`}
@@ -199,9 +270,8 @@ export default async function Home() {
                         placeholder="midterms, dating apps, dorm life, NYC weekends..."
                         maxLength={180}
                       />
-                      <button type="submit">Generate</button>
+                      <button type="submit">Generate caption</button>
                     </div>
-                    <small>The exact prompt used to generate each caption is saved in the database.</small>
                   </form>
                 ) : (
                   <a className="lockedCta" href="/login">
@@ -227,9 +297,11 @@ export default async function Home() {
                           <div className="rank">#{index + 1}</div>
                           <div className="captionBody">
                             <p>{caption.caption_text}</p>
-                            <span>caption · score {score >= 0 ? "+" : ""}{score}</span>
+                            <span>
+                              AI generated · {score >= 0 ? "+" : ""}{score} points
+                            </span>
                           </div>
-                          <div className="voteBox">
+                          <div className="voteBox" aria-label="Vote on caption">
                             <form action={vote}>
                               <input type="hidden" name="caption_id" value={caption.id} />
                               <input type="hidden" name="vote" value="1" />
@@ -237,7 +309,8 @@ export default async function Home() {
                                 className={myVote === 1 ? "voteButton active" : "voteButton"}
                                 type="submit"
                                 disabled={!user}
-                                aria-label="Upvote"
+                                aria-label="Upvote caption"
+                                title={user ? "Upvote (click again to remove)" : "Sign in to vote"}
                               >
                                 ↑
                               </button>
@@ -250,7 +323,8 @@ export default async function Home() {
                                 className={myVote === -1 ? "voteButton active" : "voteButton"}
                                 type="submit"
                                 disabled={!user}
-                                aria-label="Downvote"
+                                aria-label="Downvote caption"
+                                title={user ? "Downvote (click again to remove)" : "Sign in to vote"}
                               >
                                 ↓
                               </button>
@@ -268,7 +342,11 @@ export default async function Home() {
       </section>
 
       <footer>
-        CATCAPTION · AI captions + community voting · built with Supabase and Gemini
+        <div>
+          <strong>CATCAPTION</strong>
+          <span>AI captions + community voting</span>
+        </div>
+        <span>Built with Supabase, Gemini &amp; Vercel</span>
       </footer>
     </main>
   );
