@@ -11,7 +11,7 @@
 }
 
 * { box-sizing: border-box; }
-html { background: var(--paper); }
+html { background: var(--paper); scroll-behavior: smooth; }
 body {
   margin: 0;
   background: var(--paper);
@@ -25,7 +25,7 @@ button, input { font: inherit; }
 .hero {
   background: var(--white);
   border-bottom: 1px solid var(--black);
-  padding: 22px clamp(20px, 5vw, 72px) 54px;
+  padding: 22px clamp(20px, 5vw, 72px) 44px;
 }
 .nav {
   display: flex;
@@ -41,6 +41,7 @@ button, input { font: inherit; }
 }
 .navLinks { display: flex; gap: 18px; align-items: center; font-weight: 700; }
 .navLinks a { text-decoration: none; border-bottom: 1px solid var(--black); }
+.navLinks form { margin: 0; }
 .signedIn { font-size: .72rem; text-transform: uppercase; letter-spacing: .12em; color: var(--mid); }
 .loginLink {
   background: var(--black);
@@ -48,8 +49,17 @@ button, input { font: inherit; }
   padding: 10px 13px;
   border: 1px solid var(--black) !important;
 }
+.textButton {
+  border: 0;
+  border-bottom: 1px solid var(--black);
+  padding: 0;
+  background: transparent;
+  color: var(--black);
+  cursor: pointer;
+  font-weight: 700;
+}
 
-.heroCopy { max-width: 980px; padding-top: 78px; }
+.heroCopy { max-width: 980px; padding-top: 68px; }
 .eyebrow {
   display: inline-block;
   font-size: .7rem;
@@ -66,11 +76,35 @@ button, input { font: inherit; }
   max-width: 1100px;
 }
 .heroCopy p {
-  max-width: 650px;
+  max-width: 660px;
   font-size: clamp(1.02rem, 2vw, 1.35rem);
   line-height: 1.5;
   margin: 34px 0 0;
   color: var(--charcoal);
+}
+.statsBar {
+  display: grid;
+  grid-template-columns: 130px 130px 130px 1fr;
+  gap: 12px;
+  margin-top: 48px;
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+}
+.statsBar > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.statsBar strong { font-size: 1.35rem; line-height: 1.15; }
+.statsBar span { color: var(--mid); font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; }
+.winnerStat {
+  padding-left: 20px;
+  border-left: 1px solid var(--line);
+}
+.winnerStat strong {
+  font-size: .95rem;
+  max-width: 520px;
+  font-weight: 700;
 }
 
 .howItWorks {
@@ -89,12 +123,40 @@ button, input { font: inherit; }
 }
 .howItWorks span:last-child { border-right: 0; }
 
+.feedHeader {
+  max-width: 1240px;
+  margin: 46px auto 0;
+  padding: 0 clamp(20px, 5vw, 72px);
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px;
+}
+.feedHeader h2 {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 3.3rem);
+  letter-spacing: -.055em;
+}
+.sortTabs {
+  display: flex;
+  border: 1px solid var(--black);
+  background: var(--white);
+}
+.sortTabs a {
+  text-decoration: none;
+  padding: 9px 12px;
+  font-size: .78rem;
+  font-weight: 800;
+}
+.sortTabs a + a { border-left: 1px solid var(--black); }
+.sortTabs a.active { background: var(--black); color: var(--white); }
+
 .feed { padding: 0 clamp(20px, 5vw, 72px); }
 .memeCard {
   display: grid;
   grid-template-columns: minmax(300px, .92fr) minmax(420px, 1.08fr);
   border: 1px solid var(--black);
-  margin: 52px auto;
+  margin: 34px auto 52px;
   max-width: 1240px;
   background: var(--white);
   box-shadow: 8px 8px 0 #d9d9d9;
@@ -120,7 +182,7 @@ button, input { font: inherit; }
   position: absolute;
   left: 16px;
   bottom: 16px;
-  background: rgba(255,255,255,.94);
+  background: rgba(255,255,255,.95);
   border: 1px solid var(--black);
   padding: 8px 10px;
   font-size: .78rem;
@@ -131,6 +193,13 @@ button, input { font: inherit; }
 .captionPanel { padding: clamp(22px, 4vw, 44px); }
 .sectionTitle { display: flex; align-items: start; justify-content: space-between; gap: 18px; }
 .sectionTitle h2 { font-size: 2rem; letter-spacing: -.045em; margin: 0; }
+.memeDescription {
+  margin: 9px 0 0;
+  color: var(--mid);
+  line-height: 1.45;
+  max-width: 560px;
+  font-size: .9rem;
+}
 .count {
   border: 1px solid var(--line);
   border-radius: 999px;
@@ -146,7 +215,13 @@ button, input { font: inherit; }
   padding: 16px;
   margin: 24px 0 28px;
 }
-.generator label { display: block; font-weight: 800; margin-bottom: 8px; }
+.generator label { display: block; font-weight: 800; margin-bottom: 4px; }
+.helperText {
+  color: var(--mid);
+  margin: 0 0 10px;
+  font-size: .82rem;
+  line-height: 1.4;
+}
 .generatorRow { display: flex; gap: 8px; }
 .generator input {
   min-width: 0;
@@ -164,7 +239,6 @@ button, input { font: inherit; }
   cursor: pointer;
 }
 .generator button:hover { background: var(--charcoal); }
-.generator small { display: block; margin-top: 10px; color: var(--mid); line-height: 1.4; }
 
 .lockedCta {
   display: block;
@@ -198,6 +272,7 @@ button, input { font: inherit; }
   cursor: pointer;
   font-weight: 900;
 }
+.voteButton:hover:not(:disabled) { background: var(--soft); }
 .voteButton.active { background: var(--black); color: var(--white); }
 .voteButton:disabled { cursor: not-allowed; opacity: .3; }
 .voteBox strong { font-size: .82rem; }
@@ -209,6 +284,9 @@ button, input { font: inherit; }
 }
 
 footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
   background: var(--white);
   border-top: 1px solid var(--black);
   padding: 28px clamp(20px, 5vw, 72px);
@@ -218,6 +296,8 @@ footer {
   text-transform: uppercase;
   color: var(--mid);
 }
+footer div { display: flex; gap: 12px; }
+footer strong { color: var(--black); }
 
 .loginPage {
   min-height: 100vh;
@@ -251,12 +331,27 @@ footer {
   cursor: pointer;
 }
 
+@media (max-width: 900px) {
+  .statsBar { grid-template-columns: repeat(3, 1fr); }
+  .winnerStat { grid-column: 1 / -1; border-left: 0; border-top: 1px solid var(--line); padding: 14px 0 0; }
+}
+
 @media (max-width: 800px) {
+  .nav { align-items: flex-start; }
+  .navLinks { flex-wrap: wrap; justify-content: flex-end; }
   .howItWorks { grid-template-columns: 1fr; }
   .howItWorks span { border-right: 0; border-bottom: 1px solid var(--line); }
+  .feedHeader { align-items: flex-start; flex-direction: column; }
   .memeCard { grid-template-columns: 1fr; }
   .imagePanel { border-right: 0; border-bottom: 1px solid var(--black); min-height: 360px; }
   .generatorRow { flex-direction: column; }
   .captionItem { grid-template-columns: 34px 1fr; }
   .voteBox { grid-column: 2; grid-template-columns: auto auto auto; align-items: center; justify-content: start; gap: 6px; }
+  footer { flex-direction: column; }
+}
+
+@media (max-width: 560px) {
+  .statsBar { grid-template-columns: 1fr 1fr; }
+  .statsBar > div:nth-child(3) { grid-column: 1 / -1; }
+  .hero { padding-bottom: 30px; }
 }
