@@ -5,10 +5,13 @@ import { createClient } from "@/lib/supabase/client";
 export default function LoginPage() {
   const signInWithGoogle = async () => {
     const supabase = createClient();
+
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        // Use the stable production callback so Google login works even when
+        // someone opens a commit-specific Vercel deployment URL.
+        redirectTo: "https://nextjs-homework-sigma.vercel.app/auth/callback",
       },
     });
   };
