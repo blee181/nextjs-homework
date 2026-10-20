@@ -164,7 +164,7 @@ export default async function Home({
     redirect("/?generated=1");
   }
 
-  async function vote  async function vote(formData: FormData) {
+  async function vote(formData: FormData) {
     "use server";
 
     const supabase = await createClient();
