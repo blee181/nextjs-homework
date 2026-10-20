@@ -98,17 +98,13 @@ export default async function Home({
       `Variation cue: ${Date.now()}. Return only the caption. No quotation marks, hashtags, explanations, or emojis.`;
 
     const token = process.env.AI_GATEWAY_API_KEY ?? process.env.VERCEL_OIDC_TOKEN;
-    if (!token) {
-      console.error("Caption generation: no AI Gateway credential is available.");
-      redirect(`/?sort=new&error=caption-generation#meme-${meme.id}`);
-    }
-
     const models = ["openai/gpt-5.6-sol", "anthropic/claude-sonnet-5"];
     let caption = "";
 
-    for (const model of models) {
-      try {
-        const aiResponse = await fetch("https://ai-gateway.vercel.sh/v1/chat/completions", {
+    if (token) {
+      for (const model of models) {
+        try {
+          const aiResponse = await fetch("https://ai-gateway.vercel.sh/v1/chat/completions", {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -135,15 +131,18 @@ export default async function Home({
           .replace(/^["“]|["”]$/g, "")
           .slice(0, 220);
 
-        if (candidate && !previousCaptions.some((existing) =>
-          existing.trim().toLowerCase() === candidate.toLowerCase()
-        )) {
-          caption = candidate;
-          break;
+          if (candidate && !previousCaptions.some((existing) =>
+            existing.trim().toLowerCase() === candidate.toLowerCase()
+          )) {
+            caption = candidate;
+            break;
+          }
+        } catch (generationFailure) {
+          console.error("AI Gateway request failed", model, generationFailure);
         }
-      } catch (generationFailure) {
-        console.error("AI Gateway request failed", model, generationFailure);
       }
+    } else {
+      console.warn("No AI Gateway credential found; using the built-in caption fallback.");
     }
 
     if (!caption) {
