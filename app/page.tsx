@@ -1,6 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import GenerateButton from "@/app/GenerateButton";
 
 type Vote = { vote: number; user_id: string };
 type Caption = {
@@ -99,7 +100,7 @@ export default async function Home({
     const token = process.env.AI_GATEWAY_API_KEY ?? process.env.VERCEL_OIDC_TOKEN;
     if (!token) {
       console.error("Caption generation: no AI Gateway credential is available.");
-      redirect("/?error=caption-generation");
+      redirect(`/?sort=new&error=caption-generation#meme-${meme.id}`);
     }
 
     const models = ["openai/gpt-5.6-sol", "anthropic/claude-sonnet-5"];
@@ -158,10 +159,10 @@ export default async function Home({
 
     if (error) {
       console.error("Caption insert failed", error);
-      redirect("/?error=caption-save");
+      redirect(`/?sort=new&error=caption-save#meme-${meme.id}`);
     }
 
-    redirect("/?generated=1");
+    redirect(`/?sort=new&generated=1#meme-${meme.id}`);
   }
 
   async function vote(formData: FormData) {
@@ -287,7 +288,7 @@ export default async function Home({
           });
 
           return (
-            <article className="memeCard" key={meme.id}>
+            <article className="memeCard" id={`meme-${meme.id}`} key={meme.id}>
               <div className="imagePanel">
                 <img src={meme.image_url} alt={meme.description} />
                 <div className="imageLabel">{meme.title}</div>
@@ -317,7 +318,7 @@ export default async function Home({
                         placeholder="midterms, dating apps, dorm life, NYC weekends..."
                         maxLength={180}
                       />
-                      <button type="submit">Generate caption</button>
+                      <GenerateButton />
                     </div>
                   </form>
                 ) : (
