@@ -355,3 +355,19 @@ footer strong { color: var(--black); }
   .statsBar > div:nth-child(3) { grid-column: 1 / -1; }
   .hero { padding-bottom: 30px; }
 }
+
+
+.statusNotice {
+  max-width: 1240px;
+  margin: 24px auto 0;
+  padding: 13px 16px;
+  border: 1px solid var(--black);
+  font-size: .88rem;
+  font-weight: 700;
+}
+.statusNotice.success {
+  background: var(--white);
+}
+.statusNotice.error {
+  background: var(--soft);
+}
