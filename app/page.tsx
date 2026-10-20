@@ -22,9 +22,9 @@ type Meme = {
 export default async function Home({
   searchParams,
 }: {
-  searchParams: Promise<{ sort?: string }>;
+  searchParams: Promise<{ sort?: string; error?: string; generated?: string }>;
 }) {
-  const { sort } = await searchParams;
+  const { sort, error: generationError, generated } = await searchParams;
   const mode = sort === "new" ? "new" : "top";
 
   const supabase = await createClient();
@@ -76,43 +76,78 @@ export default async function Home({
 
     if (!meme) throw new Error("Meme not found.");
 
+    const { data: previousRows } = await supabase
+      .from("captions")
+      .select("caption_text")
+      .eq("meme_image_id", meme.id)
+      .order("created_at", { ascending: false })
+      .limit(8);
+
+    const previousCaptions = (previousRows ?? [])
+      .map((row) => row.caption_text)
+      .filter(Boolean);
+
     const prompt =
-      `Write exactly one short, funny meme caption for a chronically-online Columbia student in NYC. ` +
+      `Write exactly one NEW short, funny meme caption for a chronically-online Columbia student in NYC. ` +
       `Image title: "${meme.title}". Image description: "${meme.description}". ` +
       `User direction: "${style || "Make it dry, relatable, internet-native, and under 18 words."}" ` +
-      `Return only the caption. No quotation marks, hashtags, explanations, or emojis.`;
+      (previousCaptions.length
+        ? `Do NOT repeat or closely paraphrase these existing captions: ${previousCaptions.join(" | ")}. `
+        : "") +
+      `Variation cue: ${Date.now()}. Return only the caption. No quotation marks, hashtags, explanations, or emojis.`;
 
     const token = process.env.AI_GATEWAY_API_KEY ?? process.env.VERCEL_OIDC_TOKEN;
-    if (!token) throw new Error("AI Gateway is not configured.");
-
-    const aiResponse = await fetch("https://ai-gateway.vercel.sh/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3.6-flash",
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.9,
-        max_tokens: 80,
-      }),
-      cache: "no-store",
-    });
-
-    if (!aiResponse.ok) {
-      const detail = await aiResponse.text();
-      console.error("AI Gateway error", aiResponse.status, detail);
-      throw new Error("Caption generation failed. Please try again.");
+    if (!token) {
+      console.error("Caption generation: no AI Gateway credential is available.");
+      redirect("/?error=caption-generation");
     }
 
-    const result = await aiResponse.json();
-    const caption = String(result.choices?.[0]?.message?.content ?? "")
-      .trim()
-      .replace(/^["“]|["”]$/g, "")
-      .slice(0, 220);
+    const models = ["openai/gpt-5.6-sol", "anthropic/claude-sonnet-5"];
+    let caption = "";
 
-    if (!caption) throw new Error("The AI returned an empty caption.");
+    for (const model of models) {
+      try {
+        const aiResponse = await fetch("https://ai-gateway.vercel.sh/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model,
+            messages: [{ role: "user", content: prompt }],
+            max_tokens: 80,
+            stream: false,
+          }),
+          cache: "no-store",
+        });
+
+        if (!aiResponse.ok) {
+          const detail = await aiResponse.text();
+          console.error("AI Gateway model failed", model, aiResponse.status, detail);
+          continue;
+        }
+
+        const result = await aiResponse.json();
+        const candidate = String(result.choices?.[0]?.message?.content ?? "")
+          .trim()
+          .replace(/^["“]|["”]$/g, "")
+          .slice(0, 220);
+
+        if (candidate && !previousCaptions.some((existing) =>
+          existing.trim().toLowerCase() === candidate.toLowerCase()
+        )) {
+          caption = candidate;
+          break;
+        }
+      } catch (generationFailure) {
+        console.error("AI Gateway request failed", model, generationFailure);
+      }
+    }
+
+    if (!caption) {
+      redirect("/?error=caption-generation");
+    }
 
     const { error } = await supabase.from("captions").insert({
       meme_image_id: meme.id,
@@ -121,11 +156,15 @@ export default async function Home({
       caption_text: caption,
     });
 
-    if (error) throw new Error(error.message);
-    revalidatePath("/");
+    if (error) {
+      console.error("Caption insert failed", error);
+      redirect("/?error=caption-save");
+    }
+
+    redirect("/?generated=1");
   }
 
-  async function vote(formData: FormData) {
+  async function vote  async function vote(formData: FormData) {
     "use server";
 
     const supabase = await createClient();
@@ -216,6 +255,14 @@ export default async function Home({
         <span>02 Generate a caption</span>
         <span>03 Vote the winner</span>
       </section>
+
+      {(generationError || generated) && (
+        <div className={generationError ? "statusNotice error" : "statusNotice success"}>
+          {generationError
+            ? "Caption generation hit a temporary problem. Please try Generate caption again."
+            : "New AI caption generated — scroll to the meme to see it."}
+        </div>
+      )}
 
       <section className="feedHeader">
         <div>
