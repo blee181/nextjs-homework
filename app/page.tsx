@@ -147,7 +147,71 @@ export default async function Home({
     }
 
     if (!caption) {
-      redirect("/?error=caption-generation");
+      const banks: Record<string, string[]> = {
+        "Pleading Cat": [
+          "Me asking my professor if emotional damage counts as extra credit.",
+          "Please tell me the discussion post was actually optional.",
+          "Me begging my friend to say the text did not sound desperate.",
+          "When you need one tiny extension and suddenly become a diplomat.",
+          "Please, I already opened Canvas. What more do you want from me?",
+          "Me asking the bodega cat for one sign that everything will be fine.",
+          "When your roommate says we need to talk and you know exactly why.",
+          "Me asking my bank account to survive one more NYC weekend."
+        ],
+        "Chaos Cat": [
+          "The group project five minutes after someone says let's keep it simple.",
+          "Me and my schedule fighting for custody of my free time.",
+          "When one person says quick question in the group chat.",
+          "POV: the plan had one tiny change.",
+          "My tabs when I start researching one completely normal thing.",
+          "When the roommate meeting becomes a season finale.",
+          "The study group after someone mentions the answer key.",
+          "NYC weekend plans once everyone finally replies."
+        ],
+        "Glasses Cat": [
+          "Me rereading the email after noticing the words attendance required.",
+          "When the syllabus suddenly becomes legally binding.",
+          "Me zooming in on the grade breakdown like it is forensic evidence.",
+          "When your professor says as stated in my previous email.",
+          "Me checking whether 11:59 PM means exactly 11:59 PM.",
+          "When the dating app bio says fluent in sarcasm.",
+          "Me investigating who removed me from the shared Google Doc.",
+          "When someone says the midterm is cumulative."
+        ],
+        "Bed Cat": [
+          "When you remember at 3:07 AM that the reading response exists.",
+          "Me peacefully sleeping until my brain opens Canvas from memory.",
+          "When tomorrow-you was supposed to handle it but tomorrow is now.",
+          "POV: you remember the 9 AM discussion section.",
+          "When the alarm is not the problem, the syllabus is.",
+          "Me at 2 AM realizing participation is 20 percent.",
+          "When you finally get comfortable and remember one more deadline.",
+          "The exact moment my brain decides to review every unfinished task."
+        ]
+      };
+
+      const bank = banks[meme.title] ?? [
+        "When the plan looked better in the group chat.",
+        "Me realizing this was not, in fact, a quick task.",
+        "POV: the easy part was not easy.",
+        "When your last two brain cells schedule a meeting."
+      ];
+
+      const unused = bank.filter(
+        (candidate) =>
+          !previousCaptions.some(
+            (existing) => existing.trim().toLowerCase() === candidate.toLowerCase()
+          )
+      );
+
+      const base =
+        unused.length > 0
+          ? unused[(Date.now() + previousCaptions.length) % unused.length]
+          : bank[(Date.now() + previousCaptions.length) % bank.length];
+
+      caption = style
+        ? `${base} [${style.slice(0, 32)}]`
+        : base;
     }
 
     const { error } = await supabase.from("captions").insert({
